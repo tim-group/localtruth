@@ -50,4 +50,13 @@ class RangeSetSpec extends Specification {
     }
   }
 
+  "The intersection of two range sets" should {
+    "contain the intersections of every range in set A with every range in set B" in {
+      val setA:RangeSet[Int] = Set(closed(0, 2), closed(5, 10), closed(15, 20))
+      val setB:RangeSet[Int] = Set(closed(1, 3), closed(4, 8), closed(8, 9), closed(9, 13), closed(14, 16))
+      val intersection = setA intersect setB
+      intersection should be equalTo Set(closed(1,2), closed(5,8), closed(8,9), closed(9, 10), closed(15, 16))
+    }
+  }
+
 }

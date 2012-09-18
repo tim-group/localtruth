@@ -79,16 +79,16 @@ case class Range[T](val lower: Bound[T], val upper: Bound[T]) {
 }
 
 object Ranges {
-  implicit def setOfRanges2RangeSet[T](ranges:Set[Range[T]])(implicit ord:Ordering[T]):RangeSet[T] = new RangeSet[T](ranges)
+  implicit def iterableOfRanges2RangeSet[T](ranges:Iterable[Range[T]])(implicit ord:Ordering[T]):RangeSet[T] = new RangeSet[T](ranges)
   def closed[T](lower:T, higher:T)(implicit ord:Ordering[T]) = Range(ClosedBound(lower), ClosedBound(higher))
   def open[T](lower:T, higher:T)(implicit ord:Ordering[T]) = Range(OpenBound(lower), OpenBound(higher))
   def unbounded[T](implicit ord:Ordering[T]) = Range(Unbounded[T](), Unbounded[T]())
 }
 
-class RangeSet[T](val uncoalesced:Set[Range[T]])(implicit ord:Ordering[T]) {
+class RangeSet[T](val uncoalesced:Iterable[Range[T]])(implicit ord:Ordering[T]) {
   lazy val coalesced:Set[Range[T]] = {
     if (uncoalesced.size < 2) {
-      uncoalesced
+      uncoalesced.toSet
     } else {
       val ordered = uncoalesced.toList.sortWith(rangeOrder)
       var left = ordered.head
@@ -112,4 +112,20 @@ class RangeSet[T](val uncoalesced:Set[Range[T]])(implicit ord:Ordering[T]) {
       if (x.lower == y.lower) (x.upper != y.upper) && (x.leastUpperBound(y) == x.upper) else (x.leastLowerBound(y) == x.lower)
 
   def containsPoint(point:T):Boolean = coalesced.exists(_.contains(point))
+
+  def intersect(other:RangeSet[T]):RangeSet[T] = {
+    val intersections = for {
+      x <- coalesced;
+      y <- other.coalesced;
+      z <- (x intersect y)
+    } yield z
+    return new RangeSet(intersections)
+  }
+
+  override def hashCode:Int = coalesced.hashCode()
+  override def equals(other:Any):Boolean = other match {
+    case otherRangeSet:RangeSet[T] => otherRangeSet.coalesced == coalesced
+    case _ => false
+  }
+  override def toString:String = coalesced.toString()
 }
