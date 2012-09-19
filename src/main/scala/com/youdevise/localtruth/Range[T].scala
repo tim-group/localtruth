@@ -86,14 +86,14 @@ object Ranges {
 }
 
 class RangeSet[T](val uncoalesced:Iterable[Range[T]])(implicit ord:Ordering[T]) {
-  lazy val coalesced:Set[Range[T]] = {
+  lazy val coalesced:List[Range[T]] = {
     if (uncoalesced.size < 2) {
-      uncoalesced.toSet
+      uncoalesced.toList
     } else {
       val ordered = uncoalesced.toList.sortWith(rangeOrder)
       var left = ordered.head
       val iter = ordered.iterator.drop(1)
-      val result = scala.collection.mutable.Set[Range[T]]()
+      val result = collection.mutable.LinkedHashSet[Range[T]]()
       while (iter.hasNext) {
         val right = iter.next()
         if (left connectedTo right) {
@@ -104,7 +104,7 @@ class RangeSet[T](val uncoalesced:Iterable[Range[T]])(implicit ord:Ordering[T]) 
         }
       }
       result add left
-      Set(result.toSeq:_*)
+      List(result.toSeq:_*)
     }
   }
   
